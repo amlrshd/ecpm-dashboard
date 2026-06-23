@@ -148,11 +148,15 @@
             const tooltip = d3.select("#tooltip");
             container.querySelectorAll('svg').forEach(el => el.remove());
             const width = container.clientWidth, height = container.clientHeight;
-            const svg = d3.select(container).append("svg").attr("width", width).attr("height", height);
             
-            const g = svg.append("g").attr("transform", `translate(${width/2}, ${height/2 - 30})`);
+            const svg = d3.select(container).append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%")
+                .attr("viewBox", `0 0 ${width} ${height}`);
+            
+            const radius = Math.min(width, height) / 3;
+            const g = svg.append("g").attr("transform", `translate(${width/2}, ${height/2 - 40})`);
             const pie = d3.pie().value(d => d.value);
-            const radius = Math.min(width, height)/3.5;
             const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius);
             
             const paths = g.selectAll("path").data(pie(data.filter(d => d.value > 0)));
@@ -170,15 +174,17 @@
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
-            // Horizontal Legend at the bottom
-            const legendData = data.filter(d => d.value > 0);
-            const legend = svg.append("g").attr("transform", `translate(${width/2}, ${height - 50})`);
+            // Improved Horizontal Legend
+            const activeData = data.filter(d => d.value > 0);
+            const legend = svg.append("g")
+                .attr("transform", `translate(${width/2}, ${height - 30})`);
             
-            legendData.forEach((d, i) => {
-                const itemWidth = 120;
-                const g = legend.append("g").attr("transform", `translate(${i * itemWidth - (legendData.length * itemWidth / 2)}, 0)`);
-                g.append("rect").attr("width", 12).attr("height", 12).attr("fill", d.color).attr("rx", 2);
-                g.append("text").text(d.id).attr("x", 18).attr("y", 10).style("font-size", "12px").style("fill", "#444746");
+            const itemWidth = 140;
+            activeData.forEach((d, i) => {
+                const xPos = (i - (activeData.length - 1) / 2) * itemWidth;
+                const item = legend.append("g").attr("transform", `translate(${xPos}, 0)`);
+                item.append("rect").attr("width", 12).attr("height", 12).attr("fill", d.color).attr("rx", 2);
+                item.append("text").text(d.id).attr("x", 18).attr("y", 10).style("font-size", "12px").style("fill", "#444746");
             });
         }
 
