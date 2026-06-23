@@ -107,18 +107,102 @@
             font-weight: 700;
         }
 
-        .metric-text {
-            font-size: 14px;
-            font-weight: 500;
-            line-height: 1.2;
-            color: var(--on-surface-default);
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 16px;
+            gap: 16px;
+            min-height: 0;
+            background-color: var(--surface);
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                flex-direction: row;
+            }
+        }
+
+        .widget-panel {
+            background-color: var(--surface-container);
+            border: 1px solid var(--surface-container-high);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
         }
 
         .chart-container {
             flex-grow: 1;
-            position: relative;
-            min-height: 0;
-            padding-bottom: 40px;
+            min-height: 300px;
+        }
+
+        .list-widget {
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .list-widget {
+                width: 320px;
+            }
+        }
+
+        .list-header {
+            padding: 16px;
+            background-color: var(--surface-container-high);
+            border-bottom: 1px solid var(--surface-container-high);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--on-surface-default);
+        }
+
+        .list-badge {
+            background-color: var(--primary);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 999px;
+        }
+
+        .list-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: background-color 0.2s;
+            cursor: default;
+        }
+
+        .list-item:hover {
+            background-color: var(--surface);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .list-icon {
+            color: var(--primary);
+            font-size: 20px;
+            background: var(--surface);
+            border-radius: 50%;
+            padding: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         svg {
@@ -159,13 +243,14 @@
             transform: translateX(-50%);
             display: flex;
             gap: 10px;
-            background: var(--surface-container-high);
+            background: var(--surface);
             padding: 6px 12px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             flex-wrap: wrap;
             justify-content: center;
             max-width: 90%;
+            border: 1px solid var(--surface-container-high);
         }
 
         .legend-item {
@@ -192,10 +277,10 @@
         </div>
         
         <select id="site-selector" class="dropdown">
-            <option value="All">All ECPM MyIMCA Sites</option>
+            <option value="All">ECPM MyIMCA Site</option>
             <option value="Kepulauan Mersing">Kepulauan Mersing</option>
             <option value="Kuantan-Pekan">Kuantan-Pekan</option>
-            <option value="Terengganu-Setiu-Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
+            <option value="Kepulauan Terengganu-Setiu & Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
         </select>
 
         <div class="metrics-container">
@@ -208,44 +293,57 @@
                 <span id="dominant-habitat" class="metric-value">--</span>
             </div>
             <div class="metric-pill hidden md:flex">
-                <span class="metric-label">Key Species Coverage</span>
-                <span id="species-info" class="metric-text">Multiple Species</span>
+                <span class="metric-label">Total Species Recorded</span>
+                <span id="species-count-metric" class="metric-value">0</span>
             </div>
         </div>
     </div>
 
-    <div class="chart-container" id="chart-container">
-        <div id="tooltip" class="d3-tooltip"></div>
-        <div class="legend-container">
-            <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-coral)"></div>Coral Reefs</div>
-            <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-seagrass)"></div>Seagrass</div>
-            <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-mangrove)"></div>Mangroves</div>
+    <div class="main-content">
+        <!-- Chart Widget -->
+        <div class="widget-panel chart-container" id="chart-container">
+            <div id="tooltip" class="d3-tooltip"></div>
+            <div class="legend-container">
+                <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-coral)"></div>Coral Reefs</div>
+                <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-seagrass)"></div>Seagrass</div>
+                <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-mangrove)"></div>Mangroves</div>
+            </div>
+        </div>
+
+        <!-- Species List Widget (ArcGIS Dashboard Style) -->
+        <div class="widget-panel list-widget">
+            <div class="list-header">
+                <h3>Species Present</h3>
+                <span id="species-badge" class="list-badge">0</span>
+            </div>
+            <div class="list-body" id="species-list">
+                <!-- List items injected via JS -->
+            </div>
         </div>
     </div>
 
     <script>
-        // Updated data structure to include species coverage as indicated by the uploaded table
         const RAW_DATA = [
             { 
                 site: "Kepulauan Mersing", 
                 Coral: 28.44, 
                 Seagrass: 109.41, 
                 Mangroves: 5.85,
-                Species: "Dugongs, Marine Turtles, Dolphins"
+                Species: "Dugong, Leatherback Turtle, Green Turtle, Hawksbill Turtle, Olive Ridley Turtle, Blacktip Reef Shark, Eagle Ray, Wedgefish, Tiger Shark, Sicklefin Weasel Shark, Whale Shark, Bottlenose Wedgefish"
             },
             { 
                 site: "Kuantan-Pekan", 
                 Coral: 0.17, 
                 Seagrass: 1.89, 
                 Mangroves: 41.16,
-                Species: "Marine Turtles"
+                Species: "Green Turtle, Hawksbill Turtle, Dwarf Whipray, Whitespotted Whipray"
             },
             { 
-                site: "Terengganu-Setiu-Tenggol", 
+                site: "Kepulauan Terengganu-Setiu & Tenggol", 
                 Coral: 4.28, 
                 Seagrass: 0.10, 
                 Mangroves: 10.26,
-                Species: "Marine Turtles, Painted Terrapins"
+                Species: "Green Turtle, Hawksbill Turtle, River Terrapin, Spiny Turtle, Asian Giant Softshell Turtle, Blacktip Reef Shark, Whale Shark, Gelam Trees, Manta Ray, Humphead Wrasse, Giant Clam, Bumphead Parrotfish"
             }
         ];
 
@@ -255,9 +353,19 @@
             "Mangroves": "var(--chart-mangrove)"
         };
 
+        // Smart icon matching based on species keywords
+        function getIconForSpecies(speciesName) {
+            const name = speciesName.toLowerCase();
+            if (name.includes('turtle') || name.includes('terrapin')) return 'pets';
+            if (name.includes('shark') || name.includes('ray') || name.includes('wrasse') || name.includes('parrotfish') || name.includes('wedgefish')) return 'set_meal';
+            if (name.includes('dugong') || name.includes('dolphin') || name.includes('whale')) return 'water';
+            if (name.includes('clam')) return 'trip_origin';
+            if (name.includes('tree')) return 'park';
+            return 'eco'; // Default fallback
+        }
+
         let currentSite = "All";
 
-        // Aggregate data based on selection
         function getProcessedData(siteFilter) {
             let coral = 0, seagrass = 0, mangroves = 0;
             let speciesSet = new Set();
@@ -268,7 +376,6 @@
                     seagrass += row.Seagrass;
                     mangroves += row.Mangroves;
                     
-                    // Collect unique species for the 'All' view
                     row.Species.split(', ').forEach(s => speciesSet.add(s));
                 }
             });
@@ -281,25 +388,21 @@
                 { id: "Mangroves", value: mangroves, color: COLOR_MAP["Mangroves"] }
             ];
 
-            // Filter out 0 value slices
             data = data.filter(d => d.value > 0);
-
-            // Find dominant habitat
             let dominant = data.length > 0 ? data.reduce((prev, current) => (prev.value > current.value) ? prev : current) : { id: "--" };
             
-            // Format species text
-            let speciesText = siteFilter === "All" ? "Diverse Marine Fauna" : Array.from(speciesSet).join(', ');
+            // Sort species alphabetically
+            let speciesArray = Array.from(speciesSet).sort();
 
-            return { data, total, dominant: dominant.id, speciesText };
+            return { data, total, dominant: dominant.id, speciesArray };
         }
 
         const container = document.getElementById('chart-container');
         const tooltip = d3.select("#tooltip");
         
-        let svg = d3.select(container).append("svg");
+        let svg = d3.select(container).insert("svg", ":first-child"); // Insert before tooltip/legend
         let chartGroup = svg.append("g");
         
-        // Center text group
         let centerTextGroup = chartGroup.append("g").attr("class", "center-text");
         let centerValue = centerTextGroup.append("text")
             .attr("text-anchor", "middle")
@@ -315,44 +418,67 @@
             .attr("dy", "1.2em")
             .text("Total km²");
 
+        function renderSpeciesList(speciesArray) {
+            const listBody = document.getElementById('species-list');
+            const badge = document.getElementById('species-badge');
+            const metricCount = document.getElementById('species-count-metric');
+            
+            // Update counts
+            badge.textContent = speciesArray.length;
+            metricCount.textContent = speciesArray.length;
+            
+            // Clear current list
+            listBody.innerHTML = '';
+
+            // Populate list
+            speciesArray.forEach(species => {
+                const iconName = getIconForSpecies(species);
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.innerHTML = `
+                    <span class="material-icons list-icon">${iconName}</span>
+                    <span class="font-medium text-[var(--on-surface-default)] text-sm">${species}</span>
+                `;
+                listBody.appendChild(item);
+            });
+        }
+
         function renderChart() {
             const width = container.clientWidth;
             const height = container.clientHeight;
             
-            // Adjust for legend space at the bottom
             const chartHeight = height - 80; 
             const radius = Math.min(width, chartHeight) / 2 * 0.85;
 
             svg.attr("viewBox", `0 0 ${width} ${height}`);
             chartGroup.attr("transform", `translate(${width / 2}, ${chartHeight / 2})`);
 
-            const { data, total, dominant, speciesText } = getProcessedData(currentSite);
+            const { data, total, dominant, speciesArray } = getProcessedData(currentSite);
 
             // Update UI Metrics
             document.getElementById('total-area').textContent = `${total.toFixed(2)} km²`;
             document.getElementById('dominant-habitat').textContent = dominant;
-            document.getElementById('species-info').textContent = speciesText;
             centerValue.attr("font-size", radius > 100 ? "32px" : "20px").text(total.toFixed(1));
 
-            // Setup Pie and Arc generators
+            // Render the ArcGIS-style list widget
+            renderSpeciesList(speciesArray);
+
             const pie = d3.pie()
                 .value(d => d.value)
                 .sort(null)
-                .padAngle(0.03); // Slight spacing between slices
+                .padAngle(0.03);
 
             const arc = d3.arc()
-                .innerRadius(radius * 0.55) // Donut hole
+                .innerRadius(radius * 0.55)
                 .outerRadius(radius);
                 
             const arcHover = d3.arc()
                 .innerRadius(radius * 0.55)
-                .outerRadius(radius * 1.05); // Pop out effect
+                .outerRadius(radius * 1.05);
 
-            // Data Join
             const paths = chartGroup.selectAll(".slice")
                 .data(pie(data), d => d.data.id);
 
-            // Enter
             const pathsEnter = paths.enter()
                 .append("g")
                 .attr("class", "slice");
@@ -360,7 +486,7 @@
             pathsEnter.append("path")
                 .attr("fill", d => d.data.color)
                 .attr("d", arc)
-                .each(function(d) { this._current = d; }) // Store initial angles for smooth transitions
+                .each(function(d) { this._current = d; })
                 .on("mouseover", function(event, d) {
                     d3.select(this)
                         .transition().duration(200)
@@ -378,7 +504,6 @@
                     `);
                 })
                 .on("mousemove", function(event) {
-                    // Position tooltip relative to container to avoid SVG viewBox scaling issues
                     const bounds = container.getBoundingClientRect();
                     const x = event.clientX - bounds.left;
                     const y = event.clientY - bounds.top;
@@ -393,7 +518,6 @@
                     tooltip.transition().duration(200).style("opacity", 0);
                 });
 
-            // Update
             const pathsUpdate = pathsEnter.merge(paths);
             
             pathsUpdate.select("path")
@@ -404,26 +528,23 @@
                     return function(t) { return arc(i(t)); };
                 });
 
-            // Exit
             paths.exit()
                 .transition().duration(300)
                 .style("opacity", 0)
                 .remove();
         }
 
-        // Event Listeners
         document.getElementById('site-selector').addEventListener('change', (e) => {
             currentSite = e.target.value;
             renderChart();
         });
 
         window.addEventListener('resize', () => {
-            // Debounce resize
             clearTimeout(window.resizeTimer);
             window.resizeTimer = setTimeout(renderChart, 100);
         });
 
-        // Initial Render
+        // Initialize
         renderChart();
 
     </script>
