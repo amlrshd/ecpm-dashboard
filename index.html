@@ -22,51 +22,60 @@
             --chart-seagrass: #44c265;
             --chart-mangrove: #fcbe00;
         }
-        body { font-family: "Google Sans", sans-serif; background-color: var(--surface); color: var(--on-surface-default); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .dashboard-header { padding: 16px 24px; background-color: var(--surface-container); border-bottom: 1px solid var(--surface-container-high); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-        .dropdown { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--outline); background-color: var(--surface); cursor: pointer; min-width: 200px; }
-        .metrics-container { display: flex; gap: 24px; }
-        .metric-pill { display: flex; flex-direction: column; }
-        .metric-label { font-size: 12px; color: var(--on-surface-de-emphasis); }
-        .metric-value { font-size: 18px; font-weight: 700; }
-        .main-content { display: flex; flex-grow: 1; padding: 16px; gap: 16px; min-height: 0; }
-        .widget-panel { background-color: var(--surface-container); border: 1px solid var(--surface-container-high); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-        .chart-container { flex-grow: 1; min-height: 300px; position: relative; }
-        .list-widget { width: 320px; flex-shrink: 0; }
-        .list-header { padding: 16px; background-color: var(--surface-container-high); display: flex; justify-content: space-between; }
-        .list-body { flex-grow: 1; overflow-y: auto; padding: 8px; }
-        .list-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
-        .list-icon { color: var(--primary); font-size: 18px; }
-        .d3-tooltip { position: absolute; pointer-events: none; background: rgba(255,255,255,0.95); border: 1px solid #ccc; padding: 8px; border-radius: 4px; font-size: 12px; opacity: 0; z-index: 100; }
+        body { font-family: "Google Sans", sans-serif; background-color: var(--surface); color: var(--on-surface-default); margin: 0; height: 100vh; overflow: hidden; }
+        
+        .dashboard-header { padding: 12px 24px; background-color: var(--surface-container); border-bottom: 1px solid var(--surface-container-high); display: flex; align-items: center; gap: 16px; }
+        
+        .main-content { height: calc(100vh - 73px); padding: 16px; position: relative; }
+        .chart-container { background-color: var(--surface-container); border: 1px solid var(--surface-container-high); border-radius: 12px; height: 100%; width: 100%; position: relative; }
+        
+        /* Drawer Styles */
+        #species-drawer {
+            position: fixed; top: 73px; right: 0; bottom: 0; width: 320px; 
+            background: var(--surface); border-left: 1px solid var(--surface-container-high);
+            box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+            z-index: 100; transition: transform 0.3s ease-in-out; transform: translateX(100%);
+            display: flex; flex-direction: column;
+        }
+        #species-drawer.active { transform: translateX(0); }
+        
+        .list-header { padding: 16px; border-bottom: 1px solid var(--surface-container-high); display: flex; justify-content: space-between; align-items: center; }
+        .list-body { height: calc(100vh - 150px); overflow-y: auto; padding: 8px; }
+        .list-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; }
+        .list-item:hover { background: var(--surface-container); }
+        .list-icon { font-size: 16px; color: var(--primary); }
+        .category-header { font-size: 11px; font-weight: 700; color: var(--on-surface-de-emphasis); text-transform: uppercase; padding: 12px 8px 4px; border-top: 1px solid var(--surface-container-high); margin-top: 8px; }
     </style>
 </head>
 <body>
 
     <div class="dashboard-header">
-        <div>
-            <h2 class="text-lg font-bold m-0">ECPM Habitat & Species Coverage</h2>
-            <p class="text-xs text-[var(--on-surface-de-emphasis)] m-0">MyIMCA Sites Area Distribution</p>
+        <div class="flex-grow">
+            <h2 class="text-md font-bold m-0">ECPM MyIMCA Habitat & Species Coverage</h2>
         </div>
-        <select id="site-selector" class="dropdown">
-            <option value="All">ECPM MyIMCA Site</option>
+        <select id="site-selector" class="dropdown border rounded p-2 text-sm outline-none">
+            <option value="All">All ECPM MyIMCA Site</option>
             <option value="Kepulauan Mersing">Kepulauan Mersing</option>
             <option value="Kuantan-Pekan">Kuantan-Pekan</option>
             <option value="Kepulauan Terengganu-Setiu & Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
         </select>
-        <div class="metrics-container">
-            <div class="metric-pill"><span class="metric-label">Total Area</span><span id="total-area" class="metric-value text-[var(--primary)]">0.00 km²</span></div>
-            <div class="metric-pill"><span class="metric-label">Total Species</span><span id="species-count-metric" class="metric-value">0</span></div>
-        </div>
+        <button id="toggle-drawer" class="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+            <span class="material-icons text-sm">list</span> Species
+        </button>
     </div>
 
     <div class="main-content">
-        <div class="widget-panel chart-container" id="chart-container">
-            <div id="tooltip" class="d3-tooltip"></div>
+        <div class="chart-container" id="chart-container">
+            <div id="tooltip" class="absolute pointer-events-none opacity-0 bg-white p-2 border rounded shadow-lg text-xs z-50"></div>
         </div>
-        <div class="widget-panel list-widget">
-            <div class="list-header"><h3>Species Present</h3></div>
-            <div class="list-body" id="species-list"></div>
+    </div>
+
+    <div id="species-drawer">
+        <div class="list-header">
+            <h3 class="font-bold">Notable Species</h3>
+            <button id="close-drawer" class="material-icons">close</button>
         </div>
+        <div class="list-body" id="species-list"></div>
     </div>
 
     <script>
@@ -76,11 +85,23 @@
             { site: "Kepulauan Terengganu-Setiu & Tenggol", Coral: 4.28, Seagrass: 0.10, Mangroves: 10.26, Species: "Green Turtle, Hawksbill Turtle, River Terrapin, Spiny Turtle, Asian Giant Softshell Turtle, Blacktip Reef Shark, Whale Shark, Gelam Trees, Manta Ray, Humphead Wrasse, Giant Clam, Bumphead Parrotfish" }
         ];
 
-        function getIcon(s) {
+        const CATEGORY_ORDER = ["Turtles", "Fish & Elasmobranchs", "Marine Mammals", "Flora", "Invertebrates", "Others"];
+
+        function getCategory(s) {
             const n = s.toLowerCase();
-            if (n.includes('turtle') || n.includes('terrapin')) return 'pets';
-            if (n.includes('shark') || n.includes('ray') || n.includes('wrasse') || n.includes('parrotfish') || n.includes('wedgefish')) return 'set_meal';
-            if (n.includes('dugong') || n.includes('dolphin') || n.includes('whale')) return 'water';
+            if (n.includes('turtle') || n.includes('terrapin')) return 'Turtles';
+            if (n.includes('shark') || n.includes('ray') || n.includes('wrasse') || n.includes('parrotfish') || n.includes('wedgefish') || n.includes('whipray')) return 'Fish & Elasmobranchs';
+            if (n.includes('dugong') || n.includes('dolphin') || n.includes('whale')) return 'Marine Mammals';
+            if (n.includes('gelam')) return 'Flora';
+            if (n.includes('clam')) return 'Invertebrates';
+            return 'Others';
+        }
+
+        function getIcon(s) {
+            const cat = getCategory(s);
+            if (cat === 'Turtles') return 'pets';
+            if (cat === 'Fish & Elasmobranchs') return 'set_meal';
+            if (cat === 'Marine Mammals') return 'water';
             return 'eco';
         }
 
@@ -93,14 +114,25 @@
                     r.Species.split(', ').forEach(s => sp.add(s));
                 }
             });
-            const tot = c+sg+m;
-            document.getElementById('total-area').innerText = tot.toFixed(2) + " km²";
-            document.getElementById('species-count-metric').innerText = sp.size;
-            
+
+            // Grouping Logic
+            const grouped = {};
+            Array.from(sp).forEach(s => {
+                const cat = getCategory(s);
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(s);
+            });
+
             const list = document.getElementById('species-list');
             list.innerHTML = '';
-            Array.from(sp).sort().forEach(s => {
-                list.innerHTML += `<div class="list-item"><span class="material-icons list-icon">${getIcon(s)}</span><span class="text-sm">${s}</span></div>`;
+            
+            CATEGORY_ORDER.forEach(cat => {
+                if (grouped[cat]) {
+                    list.innerHTML += `<div class="category-header">${cat}</div>`;
+                    grouped[cat].sort().forEach(s => {
+                        list.innerHTML += `<div class="list-item"><span class="material-icons list-icon">${getIcon(s)}</span><span class="text-xs">${s}</span></div>`;
+                    });
+                }
             });
 
             renderPieChart([
@@ -112,17 +144,18 @@
 
         function renderPieChart(data) {
             const container = document.getElementById('chart-container');
-            container.innerHTML = '<div id="tooltip" class="d3-tooltip"></div>';
+            container.querySelectorAll('svg').forEach(el => el.remove());
             const width = container.clientWidth, height = container.clientHeight;
             const svg = d3.select(container).append("svg").attr("width", width).attr("height", height);
             const g = svg.append("g").attr("transform", `translate(${width/2}, ${height/2})`);
             const pie = d3.pie().value(d => d.value);
-            const arc = d3.arc().innerRadius(80).outerRadius(Math.min(width, height)/3);
-            
+            const arc = d3.arc().innerRadius(100).outerRadius(Math.min(width, height)/3);
             g.selectAll("path").data(pie(data.filter(d => d.value > 0))).enter().append("path")
                 .attr("d", arc).attr("fill", d => d.data.color).attr("stroke", "white").style("stroke-width", "2px");
         }
 
+        document.getElementById('toggle-drawer').addEventListener('click', () => document.getElementById('species-drawer').classList.add('active'));
+        document.getElementById('close-drawer').addEventListener('click', () => document.getElementById('species-drawer').classList.remove('active'));
         document.getElementById('site-selector').addEventListener('change', (e) => updateUI(e.target.value));
         window.onload = () => updateUI();
     </script>
