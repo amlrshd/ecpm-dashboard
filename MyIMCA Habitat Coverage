@@ -86,17 +86,20 @@
         .metrics-container {
             display: flex;
             gap: 24px;
+            flex-wrap: wrap;
         }
 
         .metric-pill {
             display: flex;
             flex-direction: column;
+            max-width: 250px;
         }
 
         .metric-label {
             font-size: 12px;
             color: var(--on-surface-de-emphasis);
             font-weight: 500;
+            margin-bottom: 2px;
         }
 
         .metric-value {
@@ -104,10 +107,18 @@
             font-weight: 700;
         }
 
+        .metric-text {
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: var(--on-surface-default);
+        }
+
         .chart-container {
             flex-grow: 1;
             position: relative;
             min-height: 0;
+            padding-bottom: 40px;
         }
 
         svg {
@@ -130,7 +141,7 @@
             pointer-events: none;
             background: var(--tooltip-bg);
             border: 1px solid var(--tooltip-border);
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             font-size: 13px;
@@ -138,6 +149,7 @@
             transition: opacity 0.2s, transform 0.1s;
             transform: translate(-50%, -100%);
             z-index: 100;
+            min-width: 160px;
         }
 
         .legend-container {
@@ -148,22 +160,24 @@
             display: flex;
             gap: 16px;
             background: var(--surface-container-high);
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 999px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
         }
 
         .legend-swatch {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
         }
     </style>
@@ -172,15 +186,15 @@
 
     <div class="dashboard-header">
         <div>
-            <h2 class="text-lg font-bold m-0 leading-tight">ECPM Habitat Coverage</h2>
-            <p class="text-xs text-[var(--on-surface-de-emphasis)] m-0">MyIMCA Sites Area Distribution (km²)</p>
+            <h2 class="text-lg font-bold m-0 leading-tight">ECPM Habitat & Species Coverage</h2>
+            <p class="text-xs text-[var(--on-surface-de-emphasis)] m-0">MyIMCA Sites Area Distribution</p>
         </div>
         
         <select id="site-selector" class="dropdown">
             <option value="All">All ECPM Sites</option>
             <option value="Kepulauan Mersing">Kepulauan Mersing</option>
             <option value="Kuantan-Pekan">Kuantan-Pekan</option>
-            <option value="Kepulauan Terengganu-Setiu & Tenggol">Terengganu-Setiu-Tenggol</option>
+            <option value="Terengganu-Setiu-Tenggol">Terengganu-Setiu-Tenggol</option>
         </select>
 
         <div class="metrics-container">
@@ -191,6 +205,10 @@
             <div class="metric-pill hidden sm:flex">
                 <span class="metric-label">Dominant Habitat</span>
                 <span id="dominant-habitat" class="metric-value">--</span>
+            </div>
+            <div class="metric-pill hidden md:flex">
+                <span class="metric-label">Key Species Coverage</span>
+                <span id="species-info" class="metric-text">Multiple Species</span>
             </div>
         </div>
     </div>
@@ -205,10 +223,29 @@
     </div>
 
     <script>
+        // Updated data structure to include species coverage as indicated by the uploaded table
         const RAW_DATA = [
-            { site: "Kepulauan Mersing", Coral: 28.44, Seagrass: 109.41, Mangroves: 5.85 },
-            { site: "Kuantan-Pekan", Coral: 0.17, Seagrass: 1.89, Mangroves: 41.16 },
-            { site: "Terengganu-Setiu-Tenggol", Coral: 4.28, Seagrass: 0.10, Mangroves: 10.26 }
+            { 
+                site: "Kepulauan Mersing", 
+                Coral: 28.44, 
+                Seagrass: 109.41, 
+                Mangroves: 5.85,
+                Species: "Dugongs, Marine Turtles, Dolphins"
+            },
+            { 
+                site: "Kuantan-Pekan", 
+                Coral: 0.17, 
+                Seagrass: 1.89, 
+                Mangroves: 41.16,
+                Species: "Marine Turtles"
+            },
+            { 
+                site: "Terengganu-Setiu-Tenggol", 
+                Coral: 4.28, 
+                Seagrass: 0.10, 
+                Mangroves: 10.26,
+                Species: "Marine Turtles, Painted Terrapins"
+            }
         ];
 
         const COLOR_MAP = {
@@ -222,12 +259,16 @@
         // Aggregate data based on selection
         function getProcessedData(siteFilter) {
             let coral = 0, seagrass = 0, mangroves = 0;
+            let speciesSet = new Set();
 
             RAW_DATA.forEach(row => {
                 if (siteFilter === "All" || row.site === siteFilter) {
                     coral += row.Coral;
                     seagrass += row.Seagrass;
                     mangroves += row.Mangroves;
+                    
+                    // Collect unique species for the 'All' view
+                    row.Species.split(', ').forEach(s => speciesSet.add(s));
                 }
             });
 
@@ -242,10 +283,13 @@
             // Filter out 0 value slices
             data = data.filter(d => d.value > 0);
 
-            // Find dominant
+            // Find dominant habitat
             let dominant = data.length > 0 ? data.reduce((prev, current) => (prev.value > current.value) ? prev : current) : { id: "--" };
+            
+            // Format species text
+            let speciesText = siteFilter === "All" ? "Diverse Marine Fauna" : Array.from(speciesSet).join(', ');
 
-            return { data, total, dominant: dominant.id };
+            return { data, total, dominant: dominant.id, speciesText };
         }
 
         const container = document.getElementById('chart-container');
@@ -275,17 +319,18 @@
             const height = container.clientHeight;
             
             // Adjust for legend space at the bottom
-            const chartHeight = height - 60; 
+            const chartHeight = height - 80; 
             const radius = Math.min(width, chartHeight) / 2 * 0.85;
 
             svg.attr("viewBox", `0 0 ${width} ${height}`);
             chartGroup.attr("transform", `translate(${width / 2}, ${chartHeight / 2})`);
 
-            const { data, total, dominant } = getProcessedData(currentSite);
+            const { data, total, dominant, speciesText } = getProcessedData(currentSite);
 
             // Update UI Metrics
             document.getElementById('total-area').textContent = `${total.toFixed(2)} km²`;
             document.getElementById('dominant-habitat').textContent = dominant;
+            document.getElementById('species-info').textContent = speciesText;
             centerValue.attr("font-size", radius > 100 ? "32px" : "20px").text(total.toFixed(1));
 
             // Setup Pie and Arc generators
@@ -324,9 +369,11 @@
                     
                     tooltip.transition().duration(100).style("opacity", 1);
                     tooltip.html(`
-                        <div style="font-weight: 700; color: ${d.data.color}; margin-bottom: 4px;">${d.data.id}</div>
-                        <div>Area: <strong>${d.data.value.toFixed(2)} km²</strong></div>
-                        <div style="font-size: 11px; color: var(--on-surface-de-emphasis); margin-top: 2px;">${percent}% of current view</div>
+                        <div style="font-weight: 700; color: ${d.data.color}; margin-bottom: 6px; font-size: 14px;">${d.data.id}</div>
+                        <div style="margin-bottom: 4px;">Area: <strong style="font-size: 15px;">${d.data.value.toFixed(2)} km²</strong></div>
+                        <div style="font-size: 12px; color: var(--on-surface-de-emphasis); margin-top: 4px; border-top: 1px solid var(--tooltip-border); padding-top: 6px;">
+                            ${percent}% of current view
+                        </div>
                     `);
                 })
                 .on("mousemove", function(event) {
