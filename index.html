@@ -23,9 +23,9 @@
         }
         body { font-family: "Google Sans", sans-serif; background-color: var(--surface); color: var(--on-surface-default); margin: 0; height: 100vh; overflow: hidden; }
         
-        .dashboard-header { padding: 12px 24px; background-color: var(--surface-container); border-bottom: 1px solid var(--surface-container-high); display: flex; align-items: center; gap: 16px; }
+        .dashboard-header { padding: 16px 24px; background-color: var(--surface-container); border-bottom: 1px solid var(--surface-container-high); display: flex; flex-direction: column; gap: 12px; }
         
-        .main-content { height: calc(100vh - 73px); padding: 16px; position: relative; display: flex; }
+        .main-content { height: calc(100vh - 120px); padding: 16px; position: relative; display: flex; }
         .chart-container { background-color: var(--surface-container); border: 1px solid var(--surface-container-high); border-radius: 12px; height: 100%; width: 100%; position: relative; }
         
         .slice { transition: opacity 0.2s, transform 0.2s; cursor: pointer; }
@@ -53,18 +53,18 @@
 <body>
 
     <div class="dashboard-header">
-        <div class="flex-grow">
-            <h2 class="text-md font-bold m-0">ECPM MyIMCA Habitat & Species Coverage</h2>
+        <h2 class="text-md font-bold m-0">ECPM MyIMCA Habitat & Species Coverage</h2>
+        <div class="flex items-center gap-4">
+            <select id="site-selector" class="dropdown border rounded p-2 text-sm outline-none bg-white">
+                <option value="All">All Sites</option>
+                <option value="Kepulauan Mersing">Kepulauan Mersing</option>
+                <option value="Kuantan-Pekan">Kuantan-Pekan</option>
+                <option value="Kepulauan Terengganu-Setiu & Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
+            </select>
+            <button id="toggle-drawer" class="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                <span class="material-icons text-sm">list</span> Species
+            </button>
         </div>
-        <select id="site-selector" class="dropdown border rounded p-2 text-sm outline-none">
-            <option value="All">ECPM MyIMCA Site</option>
-            <option value="Kepulauan Mersing">Kepulauan Mersing</option>
-            <option value="Kuantan-Pekan">Kuantan-Pekan</option>
-            <option value="Kepulauan Terengganu-Setiu & Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
-        </select>
-        <button id="toggle-drawer" class="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-            <span class="material-icons text-sm">list</span> Species
-        </button>
     </div>
 
     <div class="main-content">
