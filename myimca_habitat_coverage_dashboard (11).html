@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyIMCA Habitat Coverage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0"></script>
+    
+    <style>
+        :root {
+            --primary: #0b57d0;
+            --surface: #ffffff;
+            --surface-container: #f0f4f9;
+            --surface-container-high: #e9ebf0;
+            --on-surface-default: #1b1c1d;
+            --on-surface-de-emphasis: #444746;
+            --outline: #747775;
+            --chart-coral: #06bbdf;
+            --chart-seagrass: #44c265;
+            --chart-mangrove: #fcbe00;
+        }
+        body { font-family: "Google Sans", sans-serif; background-color: var(--surface); color: var(--on-surface-default); margin: 0; height: 100vh; overflow: hidden; }
+        
+        .dashboard-header { padding: 12px 24px; background-color: var(--surface-container); border-bottom: 1px solid var(--surface-container-high); display: flex; align-items: center; gap: 16px; }
+        
+        .main-content { height: calc(100vh - 73px); padding: 16px; position: relative; }
+        .chart-container { background-color: var(--surface-container); border: 1px solid var(--surface-container-high); border-radius: 12px; height: 100%; width: 100%; position: relative; }
+        
+        /* Drawer Styles */
+        #species-drawer {
+            position: fixed; top: 73px; right: 0; bottom: 0; width: 320px; 
+            background: var(--surface); border-left: 1px solid var(--surface-container-high);
+            box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+            z-index: 100; transition: transform 0.3s ease-in-out; transform: translateX(100%);
+            display: flex; flex-direction: column;
+        }
+        #species-drawer.active { transform: translateX(0); }
+        
+        .list-header { padding: 16px; border-bottom: 1px solid var(--surface-container-high); display: flex; justify-content: space-between; align-items: center; }
+        .list-body { height: calc(100vh - 150px); overflow-y: auto; padding: 8px; }
+        .list-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; }
+        .list-item:hover { background: var(--surface-container); }
+        .list-icon { font-size: 16px; color: var(--primary); }
+        .category-header { font-size: 11px; font-weight: 700; color: var(--on-surface-de-emphasis); text-transform: uppercase; padding: 12px 8px 4px; border-top: 1px solid var(--surface-container-high); margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-header">
+        <div class="flex-grow">
+            <h2 class="text-md font-bold m-0">ECPM Habitat & Species Coverage</h2>
+        </div>
+        <select id="site-selector" class="dropdown border rounded p-2 text-sm outline-none">
+            <option value="All">ECPM MyIMCA Site</option>
+            <option value="Kepulauan Mersing">Kepulauan Mersing</option>
+            <option value="Kuantan-Pekan">Kuantan-Pekan</option>
+            <option value="Kepulauan Terengganu-Setiu & Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
+        </select>
+        <button id="toggle-drawer" class="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+            <span class="material-icons text-sm">list</span> Species
+        </button>
+    </div>
+
+    <div class="main-content">
+        <div class="chart-container" id="chart-container">
+            <div id="tooltip" class="absolute pointer-events-none opacity-0 bg-white p-2 border rounded shadow-lg text-xs z-50"></div>
+        </div>
+    </div>
+
+    <div id="species-drawer">
+        <div class="list-header">
+            <h3 class="font-bold">Notable Species</h3>
+            <button id="close-drawer" class="material-icons">close</button>
+        </div>
+        <div class="list-body" id="species-list"></div>
+    </div>
+
+    <script>
+        const RAW_DATA = [
+            { site: "Kepulauan Mersing", Coral: 28.44, Seagrass: 109.41, Mangroves: 5.85, Species: "Dugong, Leatherback Turtle, Green Turtle, Hawksbill Turtle, Olive Ridley Turtle, Blacktip Reef Shark, Eagle Ray, Wedgefish, Tiger Shark, Sicklefin Weasel Shark, Whale Shark, Bottlenose Wedgefish" },
+            { site: "Kuantan-Pekan", Coral: 0.17, Seagrass: 1.89, Mangroves: 41.16, Species: "Green Turtle, Hawksbill Turtle, Dwarf Whipray, Whitespotted Whipray" },
+            { site: "Kepulauan Terengganu-Setiu & Tenggol", Coral: 4.28, Seagrass: 0.10, Mangroves: 10.26, Species: "Green Turtle, Hawksbill Turtle, River Terrapin, Spiny Turtle, Asian Giant Softshell Turtle, Blacktip Reef Shark, Whale Shark, Gelam Trees, Manta Ray, Humphead Wrasse, Giant Clam, Bumphead Parrotfish" }
+        ];
+
+        const CATEGORY_ORDER = ["Turtles", "Fish & Elasmobranchs", "Marine Mammals", "Flora", "Invertebrates", "Others"];
+
+        function getCategory(s) {
+            const n = s.toLowerCase();
+            if (n.includes('turtle') || n.includes('terrapin')) return 'Turtles';
+            if (n.includes('shark') || n.includes('ray') || n.includes('wrasse') || n.includes('parrotfish') || n.includes('wedgefish') || n.includes('whipray')) return 'Fish & Elasmobranchs';
+            if (n.includes('dugong') || n.includes('dolphin') || n.includes('whale')) return 'Marine Mammals';
+            if (n.includes('gelam')) return 'Flora';
+            if (n.includes('clam')) return 'Invertebrates';
+            return 'Others';
+        }
+
+        function getIcon(s) {
+            const cat = getCategory(s);
+            if (cat === 'Turtles') return 'pets';
+            if (cat === 'Fish & Elasmobranchs') return 'set_meal';
+            if (cat === 'Marine Mammals') return 'water';
+            return 'eco';
+        }
+
+        function updateUI(siteFilter = "All") {
+            let c=0, sg=0, m=0;
+            let sp = new Set();
+            RAW_DATA.forEach(r => {
+                if(siteFilter === "All" || r.site === siteFilter) {
+                    c+=r.Coral; sg+=r.Seagrass; m+=r.Mangroves;
+                    r.Species.split(', ').forEach(s => sp.add(s));
+                }
+            });
+
+            // Grouping Logic
+            const grouped = {};
+            Array.from(sp).forEach(s => {
+                const cat = getCategory(s);
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(s);
+            });
+
+            const list = document.getElementById('species-list');
+            list.innerHTML = '';
+            
+            CATEGORY_ORDER.forEach(cat => {
+                if (grouped[cat]) {
+                    list.innerHTML += `<div class="category-header">${cat}</div>`;
+                    grouped[cat].sort().forEach(s => {
+                        list.innerHTML += `<div class="list-item"><span class="material-icons list-icon">${getIcon(s)}</span><span class="text-xs">${s}</span></div>`;
+                    });
+                }
+            });
+
+            renderPieChart([
+                { id: "Coral Reefs", value: c, color: "var(--chart-coral)" },
+                { id: "Seagrass", value: sg, color: "var(--chart-seagrass)" },
+                { id: "Mangroves", value: m, color: "var(--chart-mangrove)" }
+            ]);
+        }
+
+        function renderPieChart(data) {
+            const container = document.getElementById('chart-container');
+            container.querySelectorAll('svg').forEach(el => el.remove());
+            const width = container.clientWidth, height = container.clientHeight;
+            const svg = d3.select(container).append("svg").attr("width", width).attr("height", height);
+            const g = svg.append("g").attr("transform", `translate(${width/2}, ${height/2})`);
+            const pie = d3.pie().value(d => d.value);
+            const arc = d3.arc().innerRadius(100).outerRadius(Math.min(width, height)/3);
+            g.selectAll("path").data(pie(data.filter(d => d.value > 0))).enter().append("path")
+                .attr("d", arc).attr("fill", d => d.data.color).attr("stroke", "white").style("stroke-width", "2px");
+        }
+
+        document.getElementById('toggle-drawer').addEventListener('click', () => document.getElementById('species-drawer').classList.add('active'));
+        document.getElementById('close-drawer').addEventListener('click', () => document.getElementById('species-drawer').classList.remove('active'));
+        document.getElementById('site-selector').addEventListener('change', (e) => updateUI(e.target.value));
+        window.onload = () => updateUI();
+    </script>
+</body>
+</html>
