@@ -26,7 +26,7 @@
         .dashboard-header { padding: 16px 24px; background-color: var(--surface-container); border-bottom: 1px solid var(--surface-container-high); display: flex; flex-direction: column; gap: 12px; }
         
         .main-content { height: calc(100vh - 120px); padding: 16px; position: relative; display: flex; }
-        .chart-container { background-color: var(--surface-container); border: 1px solid var(--surface-container-high); border-radius: 12px; height: 100%; width: 100%; position: relative; }
+        .chart-container { background-color: var(--surface-container); border: 1px solid var(--surface-container-high); border-radius: 12px; height: 100%; width: 100%; position: relative; overflow: hidden; }
         
         .slice { transition: opacity 0.2s, transform 0.2s; cursor: pointer; }
         .slice:hover { opacity: 0.8; }
@@ -147,15 +147,18 @@
             const container = document.getElementById('chart-container');
             const tooltip = d3.select("#tooltip");
             container.querySelectorAll('svg').forEach(el => el.remove());
-            const width = container.clientWidth, height = container.clientHeight;
+            
+            // Set fixed coordinate space for viewbox consistency
+            const viewW = 600;
+            const viewH = 400;
             
             const svg = d3.select(container).append("svg")
                 .attr("width", "100%")
                 .attr("height", "100%")
-                .attr("viewBox", `0 0 ${width} ${height}`);
+                .attr("viewBox", `0 0 ${viewW} ${viewH}`);
             
-            const radius = Math.min(width, height) / 3;
-            const g = svg.append("g").attr("transform", `translate(${width/2}, ${height/2 - 40})`);
+            const radius = 100;
+            const g = svg.append("g").attr("transform", `translate(${viewW/2}, ${viewH/2 - 40})`);
             const pie = d3.pie().value(d => d.value);
             const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius);
             
@@ -174,10 +177,10 @@
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
-            // Improved Horizontal Legend
+            // Legend positioned relative to fixed viewW/viewH
             const activeData = data.filter(d => d.value > 0);
             const legend = svg.append("g")
-                .attr("transform", `translate(${width/2}, ${height - 30})`);
+                .attr("transform", `translate(${viewW/2}, ${viewH - 40})`);
             
             const itemWidth = 140;
             activeData.forEach((d, i) => {
