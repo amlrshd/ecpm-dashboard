@@ -18,535 +18,113 @@
             --on-surface-default: #1b1c1d;
             --on-surface-de-emphasis: #444746;
             --outline: #747775;
-            
-            /* Chart Colors */
-            --chart-coral: #06bbdf;    /* Cyan for Coral */
-            --chart-seagrass: #44c265; /* Green for Seagrass */
-            --chart-mangrove: #fcbe00; /* Yellow for Mangroves */
-            
-            --ff-sans: "Google Sans", sans-serif;
-            --tooltip-bg: rgba(255, 255, 255, 0.95);
-            --tooltip-border: #dcdfe5;
+            --chart-coral: #06bbdf;
+            --chart-seagrass: #44c265;
+            --chart-mangrove: #fcbe00;
         }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --primary: #a8c7fa;
-                --surface: #101218;
-                --surface-container: #282a2c;
-                --surface-container-high: #3a3f50;
-                --on-surface-default: #ffffff;
-                --on-surface-de-emphasis: #c4c7c5;
-                --outline: #9a9b9c;
-                --tooltip-bg: rgba(30, 35, 45, 0.95);
-                --tooltip-border: #4a5050;
-            }
-        }
-
-        body {
-            font-family: var(--ff-sans);
-            background-color: var(--surface);
-            color: var(--on-surface-default);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .dashboard-header {
-            padding: 16px 24px;
-            background-color: var(--surface-container);
-            border-bottom: 1px solid var(--surface-container-high);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .dropdown {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--outline);
-            background-color: var(--surface);
-            color: var(--on-surface-default);
-            font-family: var(--ff-sans);
-            font-size: 14px;
-            outline: none;
-            cursor: pointer;
-            min-width: 200px;
-        }
-
-        .dropdown:focus {
-            box-shadow: 0 0 0 2px var(--primary);
-        }
-
-        .metrics-container {
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
-
-        .metric-pill {
-            display: flex;
-            flex-direction: column;
-            max-width: 250px;
-        }
-
-        .metric-label {
-            font-size: 12px;
-            color: var(--on-surface-de-emphasis);
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-
-        .metric-value {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            padding: 16px;
-            gap: 16px;
-            min-height: 0;
-            background-color: var(--surface);
-        }
-
-        @media (min-width: 768px) {
-            .main-content {
-                flex-direction: row;
-            }
-        }
-
-        .widget-panel {
-            background-color: var(--surface-container);
-            border: 1px solid var(--surface-container-high);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .chart-container {
-            flex-grow: 1;
-            min-height: 300px;
-        }
-
-        .list-widget {
-            flex-shrink: 0;
-            width: 100%;
-        }
-
-        @media (min-width: 768px) {
-            .list-widget {
-                width: 320px;
-            }
-        }
-
-        .list-header {
-            padding: 16px;
-            background-color: var(--surface-container-high);
-            border-bottom: 1px solid var(--surface-container-high);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .list-header h3 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--on-surface-default);
-        }
-
-        .list-badge {
-            background-color: var(--primary);
-            color: white;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 2px 10px;
-            border-radius: 999px;
-        }
-
-        .list-body {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 8px;
-        }
-
-        .list-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 4px;
-            transition: background-color 0.2s;
-            cursor: default;
-        }
-
-        .list-item:hover {
-            background-color: var(--surface);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .list-icon {
-            color: var(--primary);
-            font-size: 20px;
-            background: var(--surface);
-            border-radius: 50%;
-            padding: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .slice path {
-            transition: opacity 0.2s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-        }
-
-        .slice path:hover {
-            opacity: 0.85;
-        }
-
-        .d3-tooltip {
-            position: absolute;
-            pointer-events: none;
-            background: var(--tooltip-bg);
-            border: 1px solid var(--tooltip-border);
-            padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            font-size: 13px;
-            opacity: 0;
-            transition: opacity 0.2s, transform 0.1s;
-            transform: translate(-50%, -100%);
-            z-index: 100;
-            min-width: 160px;
-        }
-
-        .legend-container {
-            position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            background: var(--surface);
-            padding: 6px 12px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 90%;
-            border: 1px solid var(--surface-container-high);
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .legend-swatch {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
+        body { font-family: "Google Sans", sans-serif; background-color: var(--surface); color: var(--on-surface-default); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .dashboard-header { padding: 16px 24px; background-color: var(--surface-container); border-bottom: 1px solid var(--surface-container-high); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+        .dropdown { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--outline); background-color: var(--surface); cursor: pointer; min-width: 200px; }
+        .metrics-container { display: flex; gap: 24px; }
+        .metric-pill { display: flex; flex-direction: column; }
+        .metric-label { font-size: 12px; color: var(--on-surface-de-emphasis); }
+        .metric-value { font-size: 18px; font-weight: 700; }
+        .main-content { display: flex; flex-grow: 1; padding: 16px; gap: 16px; min-height: 0; }
+        .widget-panel { background-color: var(--surface-container); border: 1px solid var(--surface-container-high); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+        .chart-container { flex-grow: 1; min-height: 300px; position: relative; }
+        .list-widget { width: 320px; flex-shrink: 0; }
+        .list-header { padding: 16px; background-color: var(--surface-container-high); display: flex; justify-content: space-between; }
+        .list-body { flex-grow: 1; overflow-y: auto; padding: 8px; }
+        .list-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
+        .list-icon { color: var(--primary); font-size: 18px; }
+        .d3-tooltip { position: absolute; pointer-events: none; background: rgba(255,255,255,0.95); border: 1px solid #ccc; padding: 8px; border-radius: 4px; font-size: 12px; opacity: 0; z-index: 100; }
     </style>
 </head>
 <body>
 
     <div class="dashboard-header">
         <div>
-            <h2 class="text-lg font-bold m-0 leading-tight">ECPM Habitat & Species Coverage</h2>
+            <h2 class="text-lg font-bold m-0">ECPM Habitat & Species Coverage</h2>
             <p class="text-xs text-[var(--on-surface-de-emphasis)] m-0">MyIMCA Sites Area Distribution</p>
         </div>
-        
         <select id="site-selector" class="dropdown">
             <option value="All">ECPM MyIMCA Site</option>
             <option value="Kepulauan Mersing">Kepulauan Mersing</option>
             <option value="Kuantan-Pekan">Kuantan-Pekan</option>
             <option value="Kepulauan Terengganu-Setiu & Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
         </select>
-
         <div class="metrics-container">
-            <div class="metric-pill">
-                <span class="metric-label">Total Habitat Area</span>
-                <span id="total-area" class="metric-value text-[var(--primary)]">0.00 km²</span>
-            </div>
-            <div class="metric-pill hidden sm:flex">
-                <span class="metric-label">Dominant Habitat</span>
-                <span id="dominant-habitat" class="metric-value">--</span>
-            </div>
-            <div class="metric-pill hidden md:flex">
-                <span class="metric-label">Total Species Recorded</span>
-                <span id="species-count-metric" class="metric-value">0</span>
-            </div>
+            <div class="metric-pill"><span class="metric-label">Total Area</span><span id="total-area" class="metric-value text-[var(--primary)]">0.00 km²</span></div>
+            <div class="metric-pill"><span class="metric-label">Total Species</span><span id="species-count-metric" class="metric-value">0</span></div>
         </div>
     </div>
 
     <div class="main-content">
-        <!-- Chart Widget -->
         <div class="widget-panel chart-container" id="chart-container">
             <div id="tooltip" class="d3-tooltip"></div>
-            <div class="legend-container">
-                <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-coral)"></div>Coral Reefs</div>
-                <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-seagrass)"></div>Seagrass</div>
-                <div class="legend-item"><div class="legend-swatch" style="background: var(--chart-mangrove)"></div>Mangroves</div>
-            </div>
         </div>
-
-        <!-- Species List Widget (ArcGIS Dashboard Style) -->
         <div class="widget-panel list-widget">
-            <div class="list-header">
-                <h3>Species Present</h3>
-                <span id="species-badge" class="list-badge">0</span>
-            </div>
-            <div class="list-body" id="species-list">
-                <!-- List items injected via JS -->
-            </div>
+            <div class="list-header"><h3>Species Present</h3></div>
+            <div class="list-body" id="species-list"></div>
         </div>
     </div>
 
     <script>
         const RAW_DATA = [
-            { 
-                site: "Kepulauan Mersing", 
-                Coral: 28.44, 
-                Seagrass: 109.41, 
-                Mangroves: 5.85,
-                Species: "Dugong, Leatherback Turtle, Green Turtle, Hawksbill Turtle, Olive Ridley Turtle, Blacktip Reef Shark, Eagle Ray, Wedgefish, Tiger Shark, Sicklefin Weasel Shark, Whale Shark, Bottlenose Wedgefish"
-            },
-            { 
-                site: "Kuantan-Pekan", 
-                Coral: 0.17, 
-                Seagrass: 1.89, 
-                Mangroves: 41.16,
-                Species: "Green Turtle, Hawksbill Turtle, Dwarf Whipray, Whitespotted Whipray"
-            },
-            { 
-                site: "Kepulauan Terengganu-Setiu & Tenggol", 
-                Coral: 4.28, 
-                Seagrass: 0.10, 
-                Mangroves: 10.26,
-                Species: "Green Turtle, Hawksbill Turtle, River Terrapin, Spiny Turtle, Asian Giant Softshell Turtle, Blacktip Reef Shark, Whale Shark, Gelam Trees, Manta Ray, Humphead Wrasse, Giant Clam, Bumphead Parrotfish"
-            }
+            { site: "Kepulauan Mersing", Coral: 28.44, Seagrass: 109.41, Mangroves: 5.85, Species: "Dugong, Leatherback Turtle, Green Turtle, Hawksbill Turtle, Olive Ridley Turtle, Blacktip Reef Shark, Eagle Ray, Wedgefish, Tiger Shark, Sicklefin Weasel Shark, Whale Shark, Bottlenose Wedgefish" },
+            { site: "Kuantan-Pekan", Coral: 0.17, Seagrass: 1.89, Mangroves: 41.16, Species: "Green Turtle, Hawksbill Turtle, Dwarf Whipray, Whitespotted Whipray" },
+            { site: "Kepulauan Terengganu-Setiu & Tenggol", Coral: 4.28, Seagrass: 0.10, Mangroves: 10.26, Species: "Green Turtle, Hawksbill Turtle, River Terrapin, Spiny Turtle, Asian Giant Softshell Turtle, Blacktip Reef Shark, Whale Shark, Gelam Trees, Manta Ray, Humphead Wrasse, Giant Clam, Bumphead Parrotfish" }
         ];
 
-        const COLOR_MAP = {
-            "Coral Reefs": "var(--chart-coral)",
-            "Seagrass": "var(--chart-seagrass)",
-            "Mangroves": "var(--chart-mangrove)"
-        };
-
-        // Smart icon matching based on species keywords
-        function getIconForSpecies(speciesName) {
-            const name = speciesName.toLowerCase();
-            if (name.includes('turtle') || name.includes('terrapin')) return 'pets';
-            if (name.includes('shark') || name.includes('ray') || name.includes('wrasse') || name.includes('parrotfish') || name.includes('wedgefish')) return 'set_meal';
-            if (name.includes('dugong') || name.includes('dolphin') || name.includes('whale')) return 'water';
-            if (name.includes('clam')) return 'trip_origin';
-            if (name.includes('tree')) return 'park';
-            return 'eco'; // Default fallback
+        function getIcon(s) {
+            const n = s.toLowerCase();
+            if (n.includes('turtle') || n.includes('terrapin')) return 'pets';
+            if (n.includes('shark') || n.includes('ray') || n.includes('wrasse') || n.includes('parrotfish') || n.includes('wedgefish')) return 'set_meal';
+            if (n.includes('dugong') || n.includes('dolphin') || n.includes('whale')) return 'water';
+            return 'eco';
         }
 
-        let currentSite = "All";
-
-        function getProcessedData(siteFilter) {
-            let coral = 0, seagrass = 0, mangroves = 0;
-            let speciesSet = new Set();
-
-            RAW_DATA.forEach(row => {
-                if (siteFilter === "All" || row.site === siteFilter) {
-                    coral += row.Coral;
-                    seagrass += row.Seagrass;
-                    mangroves += row.Mangroves;
-                    
-                    row.Species.split(', ').forEach(s => speciesSet.add(s));
+        function updateUI(siteFilter = "All") {
+            let c=0, sg=0, m=0;
+            let sp = new Set();
+            RAW_DATA.forEach(r => {
+                if(siteFilter === "All" || r.site === siteFilter) {
+                    c+=r.Coral; sg+=r.Seagrass; m+=r.Mangroves;
+                    r.Species.split(', ').forEach(s => sp.add(s));
                 }
             });
-
-            const total = coral + seagrass + mangroves;
-
-            let data = [
-                { id: "Coral Reefs", value: coral, color: COLOR_MAP["Coral Reefs"] },
-                { id: "Seagrass", value: seagrass, color: COLOR_MAP["Seagrass"] },
-                { id: "Mangroves", value: mangroves, color: COLOR_MAP["Mangroves"] }
-            ];
-
-            data = data.filter(d => d.value > 0);
-            let dominant = data.length > 0 ? data.reduce((prev, current) => (prev.value > current.value) ? prev : current) : { id: "--" };
+            const tot = c+sg+m;
+            document.getElementById('total-area').innerText = tot.toFixed(2) + " km²";
+            document.getElementById('species-count-metric').innerText = sp.size;
             
-            // Sort species alphabetically
-            let speciesArray = Array.from(speciesSet).sort();
-
-            return { data, total, dominant: dominant.id, speciesArray };
-        }
-
-        const container = document.getElementById('chart-container');
-        const tooltip = d3.select("#tooltip");
-        
-        let svg = d3.select(container).insert("svg", ":first-child"); // Insert before tooltip/legend
-        let chartGroup = svg.append("g");
-        
-        let centerTextGroup = chartGroup.append("g").attr("class", "center-text");
-        let centerValue = centerTextGroup.append("text")
-            .attr("text-anchor", "middle")
-            .attr("font-weight", "700")
-            .attr("fill", "var(--on-surface-default)")
-            .attr("dy", "-0.2em");
-            
-        let centerLabel = centerTextGroup.append("text")
-            .attr("text-anchor", "middle")
-            .attr("font-size", "14px")
-            .attr("font-weight", "500")
-            .attr("fill", "var(--on-surface-de-emphasis)")
-            .attr("dy", "1.2em")
-            .text("Total km²");
-
-        function renderSpeciesList(speciesArray) {
-            const listBody = document.getElementById('species-list');
-            const badge = document.getElementById('species-badge');
-            const metricCount = document.getElementById('species-count-metric');
-            
-            // Update counts
-            badge.textContent = speciesArray.length;
-            metricCount.textContent = speciesArray.length;
-            
-            // Clear current list
-            listBody.innerHTML = '';
-
-            // Populate list
-            speciesArray.forEach(species => {
-                const iconName = getIconForSpecies(species);
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.innerHTML = `
-                    <span class="material-icons list-icon">${iconName}</span>
-                    <span class="font-medium text-[var(--on-surface-default)] text-sm">${species}</span>
-                `;
-                listBody.appendChild(item);
+            const list = document.getElementById('species-list');
+            list.innerHTML = '';
+            Array.from(sp).sort().forEach(s => {
+                list.innerHTML += `<div class="list-item"><span class="material-icons list-icon">${getIcon(s)}</span><span class="text-sm">${s}</span></div>`;
             });
+
+            renderPieChart([
+                { id: "Coral Reefs", value: c, color: "var(--chart-coral)" },
+                { id: "Seagrass", value: sg, color: "var(--chart-seagrass)" },
+                { id: "Mangroves", value: m, color: "var(--chart-mangrove)" }
+            ]);
         }
 
-        function renderChart() {
-            const width = container.clientWidth;
-            const height = container.clientHeight;
+        function renderPieChart(data) {
+            const container = document.getElementById('chart-container');
+            container.innerHTML = '<div id="tooltip" class="d3-tooltip"></div>';
+            const width = container.clientWidth, height = container.clientHeight;
+            const svg = d3.select(container).append("svg").attr("width", width).attr("height", height);
+            const g = svg.append("g").attr("transform", `translate(${width/2}, ${height/2})`);
+            const pie = d3.pie().value(d => d.value);
+            const arc = d3.arc().innerRadius(80).outerRadius(Math.min(width, height)/3);
             
-            const chartHeight = height - 80; 
-            const radius = Math.min(width, chartHeight) / 2 * 0.85;
-
-            svg.attr("viewBox", `0 0 ${width} ${height}`);
-            chartGroup.attr("transform", `translate(${width / 2}, ${chartHeight / 2})`);
-
-            const { data, total, dominant, speciesArray } = getProcessedData(currentSite);
-
-            // Update UI Metrics
-            document.getElementById('total-area').textContent = `${total.toFixed(2)} km²`;
-            document.getElementById('dominant-habitat').textContent = dominant;
-            centerValue.attr("font-size", radius > 100 ? "32px" : "20px").text(total.toFixed(1));
-
-            // Render the ArcGIS-style list widget
-            renderSpeciesList(speciesArray);
-
-            const pie = d3.pie()
-                .value(d => d.value)
-                .sort(null)
-                .padAngle(0.03);
-
-            const arc = d3.arc()
-                .innerRadius(radius * 0.55)
-                .outerRadius(radius);
-                
-            const arcHover = d3.arc()
-                .innerRadius(radius * 0.55)
-                .outerRadius(radius * 1.05);
-
-            const paths = chartGroup.selectAll(".slice")
-                .data(pie(data), d => d.data.id);
-
-            const pathsEnter = paths.enter()
-                .append("g")
-                .attr("class", "slice");
-
-            pathsEnter.append("path")
-                .attr("fill", d => d.data.color)
-                .attr("d", arc)
-                .each(function(d) { this._current = d; })
-                .on("mouseover", function(event, d) {
-                    d3.select(this)
-                        .transition().duration(200)
-                        .attr("d", arcHover);
-                    
-                    const percent = ((d.data.value / total) * 100).toFixed(1);
-                    
-                    tooltip.transition().duration(100).style("opacity", 1);
-                    tooltip.html(`
-                        <div style="font-weight: 700; color: ${d.data.color}; margin-bottom: 6px; font-size: 14px;">${d.data.id}</div>
-                        <div style="margin-bottom: 4px;">Area: <strong style="font-size: 15px;">${d.data.value.toFixed(2)} km²</strong></div>
-                        <div style="font-size: 12px; color: var(--on-surface-de-emphasis); margin-top: 4px; border-top: 1px solid var(--tooltip-border); padding-top: 6px;">
-                            ${percent}% of current view
-                        </div>
-                    `);
-                })
-                .on("mousemove", function(event) {
-                    const bounds = container.getBoundingClientRect();
-                    const x = event.clientX - bounds.left;
-                    const y = event.clientY - bounds.top;
-                    tooltip.style("left", `${x}px`)
-                           .style("top", `${y - 15}px`);
-                })
-                .on("mouseout", function(event, d) {
-                    d3.select(this)
-                        .transition().duration(200)
-                        .attr("d", arc);
-                        
-                    tooltip.transition().duration(200).style("opacity", 0);
-                });
-
-            const pathsUpdate = pathsEnter.merge(paths);
-            
-            pathsUpdate.select("path")
-                .transition().duration(750).ease(d3.easeCubicOut)
-                .attrTween("d", function(d) {
-                    const i = d3.interpolate(this._current || d, d);
-                    this._current = i(0);
-                    return function(t) { return arc(i(t)); };
-                });
-
-            paths.exit()
-                .transition().duration(300)
-                .style("opacity", 0)
-                .remove();
+            g.selectAll("path").data(pie(data.filter(d => d.value > 0))).enter().append("path")
+                .attr("d", arc).attr("fill", d => d.data.color).attr("stroke", "white").style("stroke-width", "2px");
         }
 
-        document.getElementById('site-selector').addEventListener('change', (e) => {
-            currentSite = e.target.value;
-            renderChart();
-        });
-
-        window.addEventListener('resize', () => {
-            clearTimeout(window.resizeTimer);
-            window.resizeTimer = setTimeout(renderChart, 100);
-        });
-
-        // Initialize
-        renderChart();
-
+        document.getElementById('site-selector').addEventListener('change', (e) => updateUI(e.target.value));
+        window.onload = () => updateUI();
     </script>
 </body>
 </html>
