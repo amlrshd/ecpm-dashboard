@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ECPM MyIMCA Habitat & Species Coverage</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0"></script>
     
@@ -13,72 +13,133 @@
         :root {
             --primary: #0b57d0;
             --surface: #ffffff;
-            --surface-container: #f0f4f9;
-            --surface-container-high: #e9ebf0;
-            --on-surface-default: #1b1c1d;
-            --on-surface-de-emphasis: #444746;
+            --surface-container: #f8fafc;
+            --surface-container-high: #e2e8f0;
             --chart-coral: #06bbdf;
             --chart-seagrass: #44c265;
             --chart-mangrove: #fcbe00;
         }
-        body { font-family: "Google Sans", sans-serif; background-color: var(--surface); color: var(--on-surface-default); margin: 0; height: 100vh; overflow: hidden; }
         
-        .dashboard-header { padding: 16px 24px; background-color: var(--surface-container); border-bottom: 1px solid var(--surface-container-high); display: flex; flex-direction: column; gap: 12px; }
+        /* Allow natural vertical scrolling for sidebars */
+        body { 
+            font-family: "Google Sans", sans-serif; 
+            background-color: var(--surface-container); 
+            color: #1e293b; 
+            margin: 0; 
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
         
-        .main-content { height: calc(100vh - 120px); padding: 16px; position: relative; display: flex; }
-        .chart-container { background-color: var(--surface-container); border: 1px solid var(--surface-container-high); border-radius: 12px; height: 100%; width: 100%; position: relative; overflow: hidden; }
+        /* Custom scrollbar for a cleaner look in the sidebar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         .slice { transition: opacity 0.2s, transform 0.2s; cursor: pointer; }
-        .slice:hover { opacity: 0.8; }
+        .slice:hover { opacity: 0.85; }
         
-        #species-drawer {
-            position: fixed; top: 73px; right: 0; bottom: 0; width: 320px; 
-            background: var(--surface); border-left: 1px solid var(--surface-container-high);
-            box-shadow: -4px 0 12px rgba(0,0,0,0.1);
-            z-index: 100; transition: transform 0.3s ease-in-out; transform: translateX(100%);
-            display: flex; flex-direction: column;
+        .d3-tooltip { 
+            position: absolute; pointer-events: none; background: rgba(255,255,255,0.98); 
+            border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; 
+            font-size: 12px; opacity: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
         }
-        #species-drawer.active { transform: translateX(0); }
         
-        .list-header { padding: 16px; border-bottom: 1px solid var(--surface-container-high); display: flex; justify-content: space-between; align-items: center; }
-        .list-body { flex-grow: 1; overflow-y: auto; padding: 8px; }
-        .list-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; }
-        .list-item:hover { background: var(--surface-container); }
-        .list-icon { font-size: 16px; color: var(--primary); }
-        .category-header { font-size: 11px; font-weight: 700; color: var(--on-surface-de-emphasis); text-transform: uppercase; padding: 12px 8px 4px; border-top: 1px solid var(--surface-container-high); margin-top: 8px; }
-        
-        .d3-tooltip { position: absolute; pointer-events: none; background: rgba(255,255,255,0.95); border: 1px solid #ccc; padding: 10px; border-radius: 8px; font-size: 13px; opacity: 0; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .category-header { 
+            font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 0.5px; 
+            text-transform: uppercase; padding: 12px 8px 4px; border-top: 1px solid #f1f5f9; margin-top: 4px; 
+        }
+        .category-header:first-child { border-top: none; margin-top: 0; padding-top: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-header">
-        <h2 class="text-md font-bold m-0">ECPM MyIMCA Habitat & Species Coverage</h2>
-        <div class="flex items-center gap-4">
-            <select id="site-selector" class="dropdown border rounded p-2 text-sm outline-none bg-white">
-                <option value="All">All Sites</option>
-                <option value="Kepulauan Mersing">Kepulauan Mersing</option>
-                <option value="Kuantan-Pekan">Kuantan-Pekan</option>
-                <option value="Kepulauan Terengganu-Setiu & Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
-            </select>
-            <button id="toggle-drawer" class="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                <span class="material-icons text-sm">list</span> Species
-            </button>
+    <!-- Compact Sticky Header -->
+    <div class="p-4 bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+        <h2 class="text-base font-bold text-slate-800 leading-tight mb-3">ECPM MyIMCA Coverage</h2>
+        <select id="site-selector" class="w-full border border-slate-300 rounded-lg py-2 px-3 text-sm font-medium outline-none bg-slate-50 text-slate-700 focus:bg-white focus:border-blue-500 transition-colors cursor-pointer appearance-none">
+            <option value="All">All Sites Overview</option>
+            <option value="Kepulauan Mersing">Kepulauan Mersing</option>
+            <option value="Kuantan-Pekan">Kuantan-Pekan</option>
+            <option value="Kepulauan Terengganu-Setiu & Tenggol">Kepulauan Terengganu-Setiu & Tenggol</option>
+        </select>
+    </div>
+
+    <!-- 2x2 Compact Indicators Grid for Sidebars -->
+    <div class="grid grid-cols-2 gap-3 p-4">
+        
+        <div class="bg-white p-3 rounded-xl border border-slate-200 border-l-4 border-l-blue-500 shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-2">
+                <span class="text-[9px] font-bold text-slate-500 uppercase leading-tight tracking-wide">Coastline</span>
+                <span class="material-icons text-blue-500 text-sm bg-blue-50 p-1 rounded-md">water</span>
+            </div>
+            <div>
+                <h3 class="text-lg font-extrabold text-slate-800 leading-none m-0">~1k <span class="text-[10px] font-medium text-slate-500">km</span></h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-slate-200 border-l-4 border-l-cyan-400 shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-2">
+                <span class="text-[9px] font-bold text-slate-500 uppercase leading-tight tracking-wide">Corals</span>
+                <span class="material-icons text-cyan-500 text-sm bg-cyan-50 p-1 rounded-md">bubble_chart</span>
+            </div>
+            <div>
+                <h3 class="text-lg font-extrabold text-slate-800 leading-none m-0">~480 <span class="text-[10px] font-medium text-slate-500">spp</span></h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-slate-200 border-l-4 border-l-emerald-500 shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-2">
+                <span class="text-[9px] font-bold text-slate-500 uppercase leading-tight tracking-wide">Mangroves</span>
+                <span class="material-icons text-emerald-600 text-sm bg-emerald-50 p-1 rounded-md">forest</span>
+            </div>
+            <div>
+                <h3 class="text-lg font-extrabold text-slate-800 leading-none m-0">29 <span class="text-[10px] font-medium text-slate-500">spp</span></h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-slate-200 border-l-4 border-l-amber-500 shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-2">
+                <span class="text-[9px] font-bold text-slate-500 uppercase leading-tight tracking-wide">Turtles</span>
+                <span class="material-icons text-amber-500 text-sm bg-amber-50 p-1 rounded-md">pets</span>
+            </div>
+            <div>
+                <h3 class="text-lg font-extrabold text-slate-800 leading-none m-0">2 <span class="text-[10px] font-medium text-slate-500">key spp</span></h3>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Chart Section -->
+    <div class="px-4 pb-4">
+        <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2 text-center">Habitat Area (km²)</h3>
+            
+            <!-- Dynamic Height Container -->
+            <div class="relative w-full aspect-square max-h-64 mx-auto" id="chart-container">
+                <div id="tooltip" class="d3-tooltip"></div>
+            </div>
+            
+            <!-- Responsive HTML Legend -->
+            <div id="html-legend" class="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-2 pt-3 border-t border-slate-100 text-xs text-slate-600">
+                <!-- Injected via JS -->
+            </div>
         </div>
     </div>
 
-    <div class="main-content">
-        <div class="chart-container" id="chart-container">
-            <div id="tooltip" class="d3-tooltip"></div>
+    <!-- Collapsible Species Accordion -->
+    <div class="px-4 pb-8">
+        <button id="toggle-species" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-sm font-bold flex justify-between items-center px-4 border border-slate-200 transition-colors shadow-sm">
+            <div class="flex items-center gap-2"><span class="material-icons text-base text-blue-600">format_list_bulleted</span> View Notable Species</div>
+            <span class="material-icons text-slate-400" id="toggle-icon">expand_more</span>
+        </button>
+        
+        <div id="species-section" class="hidden mt-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="max-h-64 overflow-y-auto p-2" id="species-list">
+                <!-- Injected via JS -->
+            </div>
         </div>
-    </div>
-
-    <div id="species-drawer">
-        <div class="list-header">
-            <h3 class="font-bold">Notable Species</h3>
-            <button id="close-drawer" class="material-icons">close</button>
-        </div>
-        <div class="list-body" id="species-list"></div>
     </div>
 
     <script>
@@ -131,7 +192,7 @@
                 if (grouped[cat]) {
                     list.innerHTML += `<div class="category-header">${cat}</div>`;
                     grouped[cat].forEach(s => {
-                        list.innerHTML += `<div class="list-item"><span class="material-icons list-icon">${getIcon(s)}</span><span class="text-xs">${s}</span></div>`;
+                        list.innerHTML += `<div class="flex items-center gap-2 p-1.5 hover:bg-slate-50 rounded-md"><span class="material-icons text-blue-600 text-sm">${getIcon(s)}</span><span class="text-xs font-medium text-slate-700">${s}</span></div>`;
                     });
                 }
             });
@@ -148,51 +209,74 @@
             const tooltip = d3.select("#tooltip");
             container.querySelectorAll('svg').forEach(el => el.remove());
             
-            // Set fixed coordinate space for viewbox consistency
-            const viewW = 600;
-            const viewH = 400;
+            // Set up HTML legend natively to wrap perfectly in sidebar
+            const legendContainer = document.getElementById('html-legend');
+            legendContainer.innerHTML = '';
+            const activeData = data.filter(d => d.value > 0);
+            
+            activeData.forEach(d => {
+                legendContainer.innerHTML += `
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-sm shadow-sm" style="background-color: ${d.color}"></span>
+                        <span class="font-medium">${d.id}</span>
+                    </div>
+                `;
+            });
+
+            // Compact SVG canvas
+            const viewW = 300;
+            const viewH = 300;
             
             const svg = d3.select(container).append("svg")
                 .attr("width", "100%")
                 .attr("height", "100%")
-                .attr("viewBox", `0 0 ${viewW} ${viewH}`);
+                .attr("viewBox", `0 0 ${viewW} ${viewH}`)
+                .attr("preserveAspectRatio", "xMidYMid meet");
             
-            const radius = 100;
-            const g = svg.append("g").attr("transform", `translate(${viewW/2}, ${viewH/2 - 40})`);
-            const pie = d3.pie().value(d => d.value);
-            const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius);
+            const radius = 130;
+            const g = svg.append("g").attr("transform", `translate(${viewW/2}, ${viewH/2})`);
+            const pie = d3.pie().value(d => d.value).sort(null);
+            const arc = d3.arc().innerRadius(radius * 0.55).outerRadius(radius);
+            const arcHover = d3.arc().innerRadius(radius * 0.55).outerRadius(radius * 1.05);
             
-            const paths = g.selectAll("path").data(pie(data.filter(d => d.value > 0)));
+            const paths = g.selectAll("path").data(pie(activeData));
             paths.enter().append("path")
                 .attr("d", arc)
                 .attr("fill", d => d.data.color)
                 .attr("stroke", "white")
-                .style("stroke-width", "3px")
+                .style("stroke-width", "2px")
                 .attr("class", "slice")
-                .on("mouseover", (event, d) => {
-                    tooltip.style("opacity", 1).html(`<strong>${d.data.id}</strong><br/>${d.data.value.toFixed(2)} km²`);
+                .on("mouseover", function(event, d) {
+                    d3.select(this).transition().duration(200).attr("d", arcHover);
+                    tooltip.style("opacity", 1).html(`
+                        <div style="font-weight: 700; color: ${d.data.color}; margin-bottom: 2px;">${d.data.id}</div>
+                        <div style="font-size: 14px; font-weight: 500;">${d.data.value.toFixed(2)} km²</div>
+                    `);
                 })
                 .on("mousemove", (event) => {
-                    tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 10) + "px");
+                    const bounds = container.getBoundingClientRect();
+                    tooltip.style("left", (event.clientX - bounds.left + 15) + "px")
+                           .style("top", (event.clientY - bounds.top - 15) + "px");
                 })
-                .on("mouseout", () => tooltip.style("opacity", 0));
-
-            // Legend positioned relative to fixed viewW/viewH
-            const activeData = data.filter(d => d.value > 0);
-            const legend = svg.append("g")
-                .attr("transform", `translate(${viewW/2}, ${viewH - 40})`);
-            
-            const itemWidth = 140;
-            activeData.forEach((d, i) => {
-                const xPos = (i - (activeData.length - 1) / 2) * itemWidth;
-                const item = legend.append("g").attr("transform", `translate(${xPos}, 0)`);
-                item.append("rect").attr("width", 12).attr("height", 12).attr("fill", d.color).attr("rx", 2);
-                item.append("text").text(d.id).attr("x", 18).attr("y", 10).style("font-size", "12px").style("fill", "#444746");
-            });
+                .on("mouseout", function() {
+                    d3.select(this).transition().duration(200).attr("d", arc);
+                    tooltip.style("opacity", 0);
+                });
         }
 
-        document.getElementById('toggle-drawer').addEventListener('click', () => document.getElementById('species-drawer').classList.add('active'));
-        document.getElementById('close-drawer').addEventListener('click', () => document.getElementById('species-drawer').classList.remove('active'));
+        // Accordion Toggle Logic
+        document.getElementById('toggle-species').addEventListener('click', () => {
+            const section = document.getElementById('species-section');
+            const icon = document.getElementById('toggle-icon');
+            if(section.classList.contains('hidden')){
+                section.classList.remove('hidden');
+                icon.textContent = 'expand_less';
+            } else {
+                section.classList.add('hidden');
+                icon.textContent = 'expand_more';
+            }
+        });
+
         document.getElementById('site-selector').addEventListener('change', (e) => updateUI(e.target.value));
         window.onload = () => updateUI();
         window.onresize = () => updateUI(document.getElementById('site-selector').value);
